@@ -23,3 +23,6 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```bash
 initial_password=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d)  && echo -e "\nUSER:admin\nPASS: $initial_password\n"
 ```
+
+
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml

@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: metrics-server
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - chart: metrics-server
+            releaseName: metrics-server
+            destinationNamespace: kube-system
+  template:
+    metadata:
+      name: '{{releaseName}}'
+    spec:
+      project: istio-mirroring
+      source:
+        repoURL: https://kubernetes-sigs.github.io/metrics-server/
+        chart: '{{chart}}'
+        targetRevision: 3.14.0
+        helm:
+          releaseName: '{{releaseName}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{destinationNamespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
