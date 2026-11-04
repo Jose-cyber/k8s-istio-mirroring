@@ -1,8 +1,10 @@
+
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: istio-ingressgateway
   namespace: argocd
+
 spec:
   generators:
     - list:
@@ -22,6 +24,9 @@ spec:
         helm:
           releaseName: '{{releaseName}}'
           values: |
+            labels:
+              istio: ingressgateway
+
             service:
               type: NodePort
               ports:
@@ -29,27 +34,44 @@ spec:
                   port: 15021
                   protocol: TCP
                   targetPort: 15021
+
                 - name: http2
                   port: 80
                   protocol: TCP
-                  targetPort: 80
+                  targetPort: 8080
                   nodePort: 30080
+
                 - name: https
                   port: 443
                   protocol: TCP
-                  targetPort: 443
+                  targetPort: 8443
                   nodePort: 30443
+
+            autoscaling:
+              enabled: false
+
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{destinationNamespace}}'
+
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
+
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
           - SkipDryRunOnMissingResource=true
+
         retry:
           limit: 5
           backoff:

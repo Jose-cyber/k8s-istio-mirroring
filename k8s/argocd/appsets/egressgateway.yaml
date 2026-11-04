@@ -1,8 +1,10 @@
+
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
   name: istio-egressgateway
   namespace: argocd
+
 spec:
   generators:
     - list:
@@ -19,18 +21,36 @@ spec:
         repoURL: https://istio-release.storage.googleapis.com/charts
         chart: '{{chart}}'
         targetRevision: 1.30.7
+
         helm:
           releaseName: '{{releaseName}}'
           values: |
+            labels:
+              istio: egressgateway
+
             service:
               type: ClusterIP
+
+            autoscaling:
+              enabled: false
+
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 500m
+                memory: 512Mi
+
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{destinationNamespace}}'
+
       syncPolicy:
         automated:
           prune: true
           selfHeal: true
+
         syncOptions:
           - CreateNamespace=true
           - ServerSideApply=true
