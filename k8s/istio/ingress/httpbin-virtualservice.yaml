@@ -14,3 +14,12 @@ spec:
             host: httpbin.httpbin1.svc.cluster.local
             port:
               number: 8000
+          weight: 100
+
+      mirrors:
+        - destination:
+            host: httpbin.httpbin2.svc.cluster.local
+            port:
+              number: 8000
+          percentage:
+            value: 100.0
