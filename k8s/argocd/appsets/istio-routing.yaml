@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: istio-routing
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - name: istio-routing
+  template:
+    metadata:
+      name: '{{name}}'
+    spec:
+      project: istio-mirroring
+      source:
+        repoURL: https://github.com/Jose-cyber/k8s-istio-mirroring
+        targetRevision: HEAD
+        path: k8s/istio
+        directory:
+          recurse: true
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: istio-ingress
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - SkipDryRunOnMissingResource=true
