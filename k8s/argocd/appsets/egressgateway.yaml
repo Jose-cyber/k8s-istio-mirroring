@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: istio-egressgateway
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - chart: gateway
+            releaseName: istio-egressgateway
+            destinationNamespace: istio-egress
+  template:
+    metadata:
+      name: '{{releaseName}}'
+    spec:
+      project: istio-mirroring
+      source:
+        repoURL: https://istio-release.storage.googleapis.com/charts
+        chart: '{{chart}}'
+        targetRevision: 1.30.7
+        helm:
+          releaseName: '{{releaseName}}'
+          values: |
+            service:
+              type: ClusterIP
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{destinationNamespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - SkipDryRunOnMissingResource=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m

@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: istio-mirroring
+  namespace: argocd
+spec:
+  generators:
+    - git:
+        repoURL: https://github.com/Jose-cyber/k8s-istio-mirroring
+        revision: HEAD
+        directories:
+          - path: k8s/app/*
+  template:
+    metadata:
+      name: 'istio-mirroring-{{path.basename}}'
+    spec:
+      project: istio-mirroring
+      source:
+        repoURL: https://github.com/Jose-cyber/k8s-istio-mirroring
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{path.basename}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

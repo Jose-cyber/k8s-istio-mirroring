@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: istio-ingressgateway
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - chart: gateway
+            releaseName: istio-ingressgateway
+            destinationNamespace: istio-ingress
+  template:
+    metadata:
+      name: '{{releaseName}}'
+    spec:
+      project: istio-mirroring
+      source:
+        repoURL: https://istio-release.storage.googleapis.com/charts
+        chart: '{{chart}}'
+        targetRevision: 1.30.7
+        helm:
+          releaseName: '{{releaseName}}'
+          values: |
+            service:
+              type: NodePort
+              ports:
+                - name: status-port
+                  port: 15021
+                  protocol: TCP
+                  targetPort: 15021
+                - name: http2
+                  port: 80
+                  protocol: TCP
+                  targetPort: 80
+                  nodePort: 30080
+                - name: https
+                  port: 443
+                  protocol: TCP
+                  targetPort: 443
+                  nodePort: 30443
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{destinationNamespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+          - SkipDryRunOnMissingResource=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
